@@ -28,7 +28,7 @@ namespace TestApplication
         {
             services.AddControllers();
 
-            services.AddTransient<EventProvider>(x => new EventProvider(@"Persist Security Info = False; Integrate Security Catalog = TestApplication; server=\ \"));
+            services.AddTransient<IDataProvider>(x => new EventProvider(@"Persist Security Info = False; Integrate Security Catalog = TestApplication; server=\ \"));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

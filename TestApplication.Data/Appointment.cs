@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace TestApplication.Data
 {
-    public class Appointment
+    public class Appointment: IDatable
     {
         public int Id { get; set; }
         public Patient PatientId { get; set; }
