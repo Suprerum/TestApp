@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace TestApplication.Data
+namespace TestApplication.Service.Models
 {
     public class Patient
     {

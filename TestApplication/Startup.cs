@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
@@ -10,7 +11,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using TestApplication.Data;
 
 namespace TestApplication
 {
@@ -27,8 +27,6 @@ namespace TestApplication
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-
-            services.AddTransient<IDataProvider>(x => new EventProvider(@"Persist Security Info = False; Integrate Security Catalog = TestApplication; server=\ \"));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Data.SQLite;
 using System.Linq;
-using System.Threading.Tasks;
+using Dapper;
 using Microsoft.AspNetCore.Mvc;
-using TestApplication.Data;
+using TestApplication.Service.Models;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace TestApplication.Service.Controllers
 {
@@ -13,46 +12,63 @@ namespace TestApplication.Service.Controllers
     [ApiController]
     public class AppointmentController : ControllerBase
     {
-        public readonly IDataProvider appointmentProvider = null;
-        private readonly IDataProcessor appointmentProcessor;
-
-        public AppointmentController(IDataProvider appointmentProvider, IDataProcessor appointmentProcessor)
-        {
-            this.appointmentProvider = appointmentProvider;
-            this.appointmentProcessor = appointmentProcessor;
-        }
-        
-        // GET api/<AppointmentController>/name
+        string connectionString = "Data Source = test.sqlite;Version=3;";
+        // GET api/<AppointmentController>/id
         [HttpGet("{id}")]
-        public List<Appointment> Get(int id)
+        public IEnumerable<Appointment> Get(int id)
         {
-            return 
+            IEnumerable<Appointment> Appointment = null;
+            using (var connection = new SQLiteConnection(connectionString))
+            {
+                Appointment = connection.Query<Appointment>("SELECT Id, PatientId as PatientId, ServiceId as ServiceId FROM Appointment WHERE Id = @Id", new { Id = id }).ToList();
+            }
+            return Appointment;
         }
-
+        // GET api/<AppointmentController>/name
         [HttpGet("{name}")]
-        public List<Appointment> Get(string name)
+        public IEnumerable<Appointment> Get(string name)
         {
-
-            return
+            IEnumerable<Appointment> Appointment = null;
+            using (var connection = new SQLiteConnection(connectionString))
+            {
+                Appointment = connection.Query<Appointment>("SELECT Id, PatientId as PatientId, ServiceId as ServiceId, FROM Appointment" +
+                    "INNER JOIN Patient on Appointment.PatientId = Patient.Id" +
+                    "WHERE Patient.Name = @Name", new { Name = name }).ToList();
+            }
+            return Appointment;
         }
 
         // POST api/<AppointmentController>
         [HttpPost]
         public void Post([FromBody] Appointment appointment)
         {
-            appointmentProcessor.Create(appointment);
+            using (var connection = new SQLiteConnection(connectionString))
+            {
+                connection.Execute("INSERT INTO Appointment(Id, PatientId, ServiceId) VALUES (@Id, @PatientId, @ServiceId)", 
+                    new { appointment.Id, appointment.PatientId, appointment.ServiceId });
+            }
         }
 
         // PUT api/<AppointmentController>/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        public void Put(int id, [FromBody] Appointment appointment)
         {
+            using (var connection = new SQLiteConnection(connectionString))
+            {
+                connection.Execute("UPDATE Appointment SET PatientId = @PatientId, ServiceId = @ServiceId) WHERE Id=@Id",
+                    new { Id = id, appointment.PatientId, appointment.ServiceId });
+            }
         }
 
         // DELETE api/<AppointmentController>/5
         [HttpDelete("{id}")]
         public void Delete(int id)
         {
+            using (var connection = new SQLiteConnection(connectionString))
+            {
+                connection.Execute("DELETE FROM Appointment WHERE Id=@Id",
+                    new { Id = id });
+            }
         }
     }
 }

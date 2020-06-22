@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Data.SQLite;
 using System.Linq;
-using System.Threading.Tasks;
+using Dapper;
 using Microsoft.AspNetCore.Mvc;
-using TestApplication.Data;
+using TestApplication.Service.Models;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace TestApplication.Service.Controllers
 {
@@ -13,41 +12,50 @@ namespace TestApplication.Service.Controllers
     [ApiController]
     public class EventController : ControllerBase
     {
-        public readonly IDataProvider<Event> eventProvider = null;
-        public EventController(IDataProvider<Event> eventProvider)
-        {
-            this.eventProvider = eventProvider;
-        }
-        // GET: api/<EventController>
-        [HttpGet]
-        public IEnumerable<Event> Get()
-        {
-            return eventProvider.Get();
-        }
-
+        string connectionString = "Data Source = test.sqlite;Version=3";
         // GET api/<EventController>/5
         [HttpGet("{id}")]
-        public string Get(int id)
+        public IEnumerable<Event> Get(int id)
         {
-            return "value";
+            IEnumerable<Event> @event = null;
+            using (var connection = new SQLiteConnection(connectionString))
+            {
+                @event = connection.Query<Event>("SELECT Id, DateTime as DateTime, ServiceId as ServiceId, AppointmentId as AppointmentId FROM Appointment").ToList();
+            }
+            return @event;
         }
 
         // POST api/<EventController>
         [HttpPost]
-        public void Post([FromBody] string value)
+        public void Post([FromBody] Event @event)
         {
+            using (var connection = new SQLiteConnection(connectionString))
+            {
+                connection.Execute("INSERT INTO Event(Id, DateTime, ServiceId, AppointmentId) VALUES (@Id, @DateTime, @ServiceId, @AppointmentId)",
+                    new { @event.Id, @event.DateTime, @event.ServiceId, @event.AppointmentId });
+            }
         }
 
         // PUT api/<EventController>/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        public void Put(int id, [FromBody] Event @event)
         {
+            using (var connection = new SQLiteConnection(connectionString))
+            {
+                connection.Execute("UPDATE Event SET DateTime = @DateTime, ServiceId = @ServiceId, AppointmentId = @AppointmentId) WHERE Id=@Id",
+                    new { Id = id, @event.DateTime, @event.ServiceId, @event.AppointmentId });
+            }
         }
 
         // DELETE api/<EventController>/5
         [HttpDelete("{id}")]
         public void Delete(int id)
         {
+            using (var connection = new SQLiteConnection(connectionString))
+            {
+                connection.Execute("DELETE FROM Event WHERE Id=@Id",
+                    new { Id = id });
+            }
         }
     }
 }
