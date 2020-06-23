@@ -3,6 +3,7 @@ using System.Data.SQLite;
 using System.Linq;
 using Dapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using TestApplication.Service.Models;
 
 
@@ -12,49 +13,35 @@ namespace TestApplication.Service.Controllers
     [ApiController]
     public class EventController : ControllerBase
     {
-        string connectionString = "Data Source = test.sqlite;Version=3";
-        // GET api/<EventController>/5
+        public ILogger Logger { get; }
+        public EventController(ILogger<EventController> logger)
+        {
+            Logger = logger;
+        }
+
+        string connectionString = "Data Source=test.sqlite;Version=3;Pooling=True;Max Pool Size=100;";
+        
         [HttpGet("{id}")]
         public IEnumerable<Event> Get(int id)
         {
-            IEnumerable<Event> @event = null;
-            using (var connection = new SQLiteConnection(connectionString))
+            IEnumerable<Event> Event = null;
+            using (var connection = new SQLiteConnection(connectionString, true))
             {
-                @event = connection.Query<Event>("SELECT Id, DateTime as DateTime, ServiceId as ServiceId, AppointmentId as AppointmentId FROM Appointment").ToList();
+                Event = connection.Query<Event>("SELECT DISTINCT strftime('%Y %M %d',Event.DateTime), AppointmentId FROM Event" + 
+                                                "INNER JOIN Appointment on Event.AppointmentId = Appointment.Id"+
+                                                "INNER JOIN Patient on Appointment.PatientId = Patient.Id"+
+                                                "WHERE Patient.Id = @Id", new { Id = id }).ToList();
             }
-            return @event;
+            return Event;
         }
-
-        // POST api/<EventController>
-        [HttpPost]
-        public void Post([FromBody] Event @event)
-        {
-            using (var connection = new SQLiteConnection(connectionString))
-            {
-                connection.Execute("INSERT INTO Event(Id, DateTime, ServiceId, AppointmentId) VALUES (@Id, @DateTime, @ServiceId, @AppointmentId)",
-                    new { @event.Id, @event.DateTime, @event.ServiceId, @event.AppointmentId });
-            }
-        }
-
-        // PUT api/<EventController>/5
+                
         [HttpPut("{id}")]
         public void Put(int id, [FromBody] Event @event)
         {
             using (var connection = new SQLiteConnection(connectionString))
             {
-                connection.Execute("UPDATE Event SET DateTime = @DateTime, ServiceId = @ServiceId, AppointmentId = @AppointmentId) WHERE Id=@Id",
-                    new { Id = id, @event.DateTime, @event.ServiceId, @event.AppointmentId });
-            }
-        }
-
-        // DELETE api/<EventController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
-            using (var connection = new SQLiteConnection(connectionString))
-            {
-                connection.Execute("DELETE FROM Event WHERE Id=@Id",
-                    new { Id = id });
+                connection.Execute("UPDATE Event SET AppointmentId = @AppointmentId WHERE Id=@Id",
+                    new { Id = id, @event.AppointmentId });
             }
         }
     }

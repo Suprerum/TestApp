@@ -8,7 +8,7 @@ namespace TestApplication.Service.Models
     public class Appointment
     {
         public int Id { get; set; }
-        public List<Patient> PatientId { get; set; }
-        public List<Service> ServiceId { get; set; }
+        public Patient PatientId { get; set; }
+        public Service ServiceId { get; set; }
     }
 }

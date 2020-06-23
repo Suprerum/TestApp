@@ -8,9 +8,9 @@ namespace TestApplication.Service.Models
     public class Event
     {
         public int Id { get; set; }
-        public List<DateTime> DateTime { get; set; }
-        public List<Service> ServiceId { get; set; }
-        public List<Appointment> AppointmentId { get; set; }
+        public DateTime DateTime { get; set; }
+        public Service ServiceId { get; set; }
+        public Appointment AppointmentId { get; set; }
 
     }
 }

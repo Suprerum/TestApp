@@ -21,6 +21,10 @@ namespace TestApplication
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
+                }).ConfigureLogging(webBuilder =>
+                {
+                    webBuilder.AddConsole();
+                    webBuilder.AddFile();
                 });
     }
 }
